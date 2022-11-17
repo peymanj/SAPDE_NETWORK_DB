@@ -1,0 +1,554 @@
+<style>
+table { 
+	width: 100%; 
+	border-collapse: collapse; 
+	margin:5px auto;
+	}
+
+tr:nth-of-type(odd) { 
+	background: #eee; 
+	}
+
+th { 
+	background: #3498db; 
+	color: white; 
+	font-weight: bold; 
+	}
+
+td { 
+	padding: 2px; 
+	border: 1px solid #ccc; 
+	text-align: center; 
+	font-size: 12px;
+	}
+
+th { 
+	padding: 2px; 
+	border: 1px solid #ccc; 
+	text-align: center; 
+	font-size: 12px;
+	}
+
+td.left { 
+	padding: 2px; 
+	border: 1px solid #ccc; 
+	text-align: left; 
+	font-size: 12px;
+    width: 15%;
+	}
+
+}
+</style>
+
+
+<table>
+    <tr>
+        <td class="center" >
+            <h3>{{ header['company_name'] }}</h3>
+        </td>
+    </tr>
+</table>
+<table class='left'>
+    <th colspan=8 calss="center">
+        {{ header['sap_order_report'] }}
+    </th>
+    <tr>
+        <td class='left'>
+            {{ header['order'] }}
+        </td>
+        <td class='left'>
+            {{data[0].order[1]}}
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+            {{ header['date'] }}
+        </td>
+        <td class='left'>
+            {{other_data.date}}
+        </td>
+    </tr>
+    
+    <tr>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+
+        </td>
+    </tr>
+    <tr>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td class='left'>
+        </td>
+        <td>
+        </td>
+    </tr>
+    
+</table>
+<br>
+<table>
+    <table class="centered bordered">
+        <tr>
+            <td colspan=5>
+            </td>
+            <td class="center" colspan={{ other_data.visible_sn_count + other_data.visible_check_count + 1 }}>
+                {{ header['front'] }}
+            </td>
+            <td class="center" colspan={{ other_data.visible_sn_count + other_data.visible_check_count + 1 }}>
+                {{ header['back'] }}
+            </td>
+            <td colspan=5>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ header['row'] }}
+            </td>
+            <td>
+                {{ header['order_item'] }}
+            </td>
+            <td>
+                {{ header['pallet'] }}
+            </td>
+            <td>
+                {{ header['box'] }}
+            </td>
+            <td>
+                {{ header['item_set'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn1 %} style="display:none;" {% endif %}>
+                {{ header['sn1'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn2 %} style="display:none;" {% endif %}>
+                {{ header['sn2'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn3 %} style="display:none;" {% endif %}>
+                {{ header['sn3'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn4 %} style="display:none;" {% endif %}>
+                {{ header['sn4'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn5 %} style="display:none;" {% endif %}>
+                {{ header['sn5'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn6 %} style="display:none;" {% endif %}>
+                {{ header['sn6'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn7 %} style="display:none;" {% endif %}>
+                {{ header['sn7'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn8 %} style="display:none;" {% endif %}>
+                {{ header['sn8'] }}
+            </td>
+            <td {% if not other_data.visible_check.check1 %} style="display:none;" {% endif %}>
+                {{ header['check1'] }}
+            </td>
+            <td {% if not other_data.visible_check.check2 %} style="display:none;" {% endif %}>
+                {{ header['check2'] }}
+            </td>
+            <td {% if not other_data.visible_check.check3 %} style="display:none;" {% endif %}>
+                {{ header['check3'] }}
+            </td>
+            <td {% if not other_data.visible_check.check4 %} style="display:none;" {% endif %}>
+                {{ header['check4'] }}
+            </td>
+            <td {% if not other_data.visible_check.check5 %} style="display:none;" {% endif %}>
+                {{ header['check5'] }}
+            </td>
+            <td {% if not other_data.visible_check.check6 %} style="display:none;" {% endif %}>
+                {{ header['check6'] }}
+            </td>
+            <td {% if not other_data.visible_check.check7 %} style="display:none;" {% endif %}>
+                {{ header['check7'] }}
+            </td>
+            <td {% if not other_data.visible_check.check8 %} style="display:none;" {% endif %}>
+                {{ header['check8'] }}
+            </td>
+            <td>
+                {{ header['weight'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn1 %} style="display:none;" {% endif %}>
+                {{ header['sn1'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn2 %} style="display:none;" {% endif %}>
+                {{ header['sn2'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn3 %} style="display:none;" {% endif %}>
+                {{ header['sn3'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn4 %} style="display:none;" {% endif %}>
+                {{ header['sn4'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn5 %} style="display:none;" {% endif %}>
+                {{ header['sn5'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn6 %} style="display:none;" {% endif %}>
+                {{ header['sn6'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn7 %} style="display:none;" {% endif %}>
+                {{ header['sn7'] }}
+            </td>
+            <td {% if not other_data.visible_sn.sn8 %} style="display:none;" {% endif %}>
+                {{ header['sn8'] }}
+            </td>
+            <td {% if not other_data.visible_check.check1 %} style="display:none;" {% endif %}>
+                {{ header['check1'] }}
+            </td>
+            <td {% if not other_data.visible_check.check2 %} style="display:none;" {% endif %}>
+                {{ header['check2'] }}
+            </td>
+            <td {% if not other_data.visible_check.check3 %} style="display:none;" {% endif %}>
+                {{ header['check3'] }}
+            </td>
+            <td {% if not other_data.visible_check.check4 %} style="display:none;" {% endif %}>
+                {{ header['check4'] }}
+            </td>
+            <td {% if not other_data.visible_check.check5 %} style="display:none;" {% endif %}>
+                {{ header['check5'] }}
+            </td>
+            <td {% if not other_data.visible_check.check6 %} style="display:none;" {% endif %}>
+                {{ header['check6'] }}
+            </td>
+            <td {% if not other_data.visible_check.check7 %} style="display:none;" {% endif %}>
+                {{ header['check7'] }}
+            </td>
+            <td {% if not other_data.visible_check.check8 %} style="display:none;" {% endif %}>
+                {{ header['check8'] }}
+            </td>
+            <td>
+                {{ header['weight'] }}
+            </td>
+            <td>
+                {{ header['set_weight'] }}
+            </td>
+            <td>
+                {{ header['create_user'] }}
+            </td>
+            <td>
+                {{ header['update_user'] }}
+            </td>
+            <td>
+                {{ header['update_date'] }}
+            </td>
+        </tr>
+{% for i in data %}
+{% set ind=loop.index-1 %}
+{% if ind % 2 == 1 %}
+{% continue %}
+{% endif %}
+{% set rec = data[ind] %}
+{% set rec2 = data[ind+1]%}
+        <tr>
+            <td>
+                {{((loop.index+1)/2)|int}}
+            </td>
+            <td>
+                {{rec.order_item[1]}}
+            </td>
+            <td>
+                {{rec.pallet[1]}}
+            </td>
+            <td>
+                {{rec.box[1]}}
+            </td>
+            <td>
+                {{rec.item_set[1]}}
+            </td> 
+            <td {% if not other_data.visible_sn.sn1 %} style="display:none;" {% endif %}>
+                {% if rec.sn1 %}
+                    {{rec.sn1}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn2 %} style="display:none;" {% endif %}>
+                {% if rec.sn2 %}
+                {{rec.sn2}}
+                {% else %}
+                <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn3 %} style="display:none;" {% endif %}>
+                {% if rec.sn3 %}
+                    {{rec.sn3}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn4 %} style="display:none;" {% endif %}>
+                {% if rec.sn4 %}
+                    {{rec.sn4}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn5 %} style="display:none;" {% endif %}>
+                {% if rec.sn5 %}
+                    {{rec.sn5}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn6 %} style="display:none;" {% endif %}>
+                {% if rec.sn6 %}
+                    {{rec.sn6}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn7 %} style="display:none;" {% endif %}>
+                {% if rec.sn7 %}
+                    {{rec.sn7}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn8 %} style="display:none;" {% endif %}>
+                {% if rec.sn8 %}
+                    {{rec.sn8}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check1 %} style="display:none;" {% endif %}>
+                {% if rec.check1 %}
+                    &check; 
+                {% elif rec.check1 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check2 %} style="display:none;" {% endif %}>
+                {% if rec.check2 %}
+                    &check; 
+                {% elif rec.check2 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check3 %} style="display:none;" {% endif %}>
+                {% if rec.check3 %}
+                    &check; 
+                {% elif rec.check3 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check4 %} style="display:none;" {% endif %}>
+                {% if rec.check4 %}
+                    &check;
+                {% elif rec.check4 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check5 %} style="display:none;" {% endif %}>
+                {% if rec.check5 %}
+                    &check;
+                {% elif rec.check5 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check6 %} style="display:none;" {% endif %}>
+                {% if rec.check6 %}
+                    &check;
+                {% elif rec.check6 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check7 %} style="display:none;" {% endif %}>
+                {% if rec.check7 %}
+                    &check;
+                {% elif rec.check7 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check8 %} style="display:none;" {% endif %}>
+                {% if rec.check8 %}
+                    &check;
+                {% elif rec.check8 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td>
+                {{rec.weight}}
+            </td>
+            <td {% if not other_data.visible_sn.sn1 %} style="display:none;" {% endif %}>
+                {% if rec2.sn1 %}
+                    {{rec2.sn1}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn2 %} style="display:none;" {% endif %}>
+                {% if rec2.sn2 %}
+                {{rec2.sn2}}
+                {% else %}
+                <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn3 %} style="display:none;" {% endif %}>
+                {% if rec2.sn3 %}
+                    {{rec2.sn3}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn4 %} style="display:none;" {% endif %}>
+                {% if rec2.sn4 %}
+                    {{rec2.sn4}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn5 %} style="display:none;" {% endif %}>
+                {% if rec2.sn5 %}
+                    {{rec2.sn5}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn6 %} style="display:none;" {% endif %}>
+                {% if rec2.sn6 %}
+                    {{rec2.sn6}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn7 %} style="display:none;" {% endif %}>
+                {% if rec2.sn7 %}
+                    {{rec2.sn7}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_sn.sn8 %} style="display:none;" {% endif %}>
+                {% if rec2.sn8 %}
+                    {{rec2.sn8}}
+                {% else %}
+                    <span> - </span>
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check1 %} style="display:none;" {% endif %}>
+                {% if rec2.check1 %}
+                    &check;
+                {% elif rec2.check1 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check2 %} style="display:none;" {% endif %}>
+                {% if rec2.check2 %}
+                    &check;
+                {% elif rec2.check2 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check3 %} style="display:none;" {% endif %}>
+                {% if rec2.check3 %}
+                    &check;
+                {% elif rec2.check3 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check4 %} style="display:none;" {% endif %}>
+                {% if rec2.check4 %}
+                    &check;
+                {% elif rec2.check4 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check5 %} style="display:none;" {% endif %}>
+                {% if rec2.check5 %}
+                    &check;
+                {% elif rec2.check5 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check6 %} style="display:none;" {% endif %}>
+                {% if rec2.check6 %}
+                    &check;
+                {% elif rec2.check6 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check7 %} style="display:none;" {% endif %}>
+                {% if rec2.check7 %}
+                    &check;
+                {% elif rec2.check7 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td {% if not other_data.visible_check.check8 %} style="display:none;" {% endif %}>
+                {% if rec2.check8 %}
+                    &check;
+                {% elif rec2.check8 is none %}
+                    <span> - </span>
+                {% else %}
+                    &#10539;
+                {% endif %}
+            </td>
+            <td>
+                {{rec2.weight}}
+            </td>
+            </td>
+            <td>
+                {{rec.weight + rec2.weight}}
+            </td>
+            <td>
+                {{rec.create_user[1]}}
+            </td>
+            <td>
+                {{rec.check_user[1]}}
+            </td>
+            <td>
+            
+                {{rec.update_date}}
+            </td>
+        </tr>
+{%- endfor %}
+    </table>
+        
+</table>
