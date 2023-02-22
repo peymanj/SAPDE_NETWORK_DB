@@ -31,7 +31,17 @@ class ItemSet(Model):
         for id in ids:
             parts = self.pool.get('api').internal_exec('part', 'search',
                                               {'condition': [('item_set', '=', id)], 'id_only': True})
-            if len(parts) == 2:
+            order_item_id = self.pool.get('api')\
+                .internal_exec('item_set', 'related_read',
+                    context={'id': id, 'field': 'order_item'})
+            order_item = self.pool.get('api').internal_exec(
+                'order_item', 'read', context={'ids': [order_item_id], 'post_proc': False})[0]
+            model = order_item['model']
+            size = order_item['size']
+            model_item = self.pool.get('api')\
+                .internal_exec('model_item', 'search',
+                                  {'condition': ['and', ('model', '=', model), ('size', '=', size)]})
+            if len(parts) >= model_item[0]['n_parts']:
                 status = True
             else:
                 status = False

@@ -14,12 +14,8 @@ class PartsPerOrderReport(Model):
     _order = '[order] DESC, pallet, box, item_set, side'
 
     def _side_selection(self, params={}):
-        id = params.get('id')
-        data = [
-            (1, 'Front'),
-            (2, 'Back'),
-        ]
-        return self.search_in_tuple_list(data, id)
+        return self.pool.get('api').internal_exec('part', '_side_selection', context=params)
+
 
     _fields = {
         'id': Fields.integer('id'),
@@ -32,6 +28,9 @@ class PartsPerOrderReport(Model):
         'item_set': Fields.many2one('Set', relation='item_set', search=False),
         'side': Fields.selection('Side', func=_side_selection),  # 1: front  ,    2: back
         'weight': Fields.integer('Weight'),
+        'length': Fields.integer('Length'),
+        'width': Fields.integer('Width'),
+        'thickness': Fields.integer('Thickness'),
         'sn1': Fields.char('Serial number 1', length=100, required=True),
         'sn2': Fields.char('Serial number 2', length=100),
         'sn3': Fields.char('Serial number 3', length=100),
@@ -81,6 +80,9 @@ class PartsPerOrderReport(Model):
                 iset.id as item_set,
                 p.side as side,
                 p.[weight] as [weight],
+                p.length,
+                p.width,
+                p.thickness,
                 p.sn1,
                 p.sn2,
                 p.sn3,

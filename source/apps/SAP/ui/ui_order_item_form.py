@@ -51,6 +51,10 @@ class UiOrderItemForm(UiBaseClass):
             {'no_fchecks': {'max': 8}},
             'image_required',
             'check_weight',
+            'check_length',
+            'check_width',
+            'check_thickness',
+            'unique_serial',
             # 'status_disp',
         ],
         'one2many': {'field': 'boxes', 'ui_model':'UiBoxForm'}

@@ -11,14 +11,11 @@ from source.framework.utilities import log
 
 
 class GoogleSheetsAPI(object):
-    def __init__(self, sheet_id=None, sheet_name=None):
-        pass
+    def __init__(self, sheet_id=None, sheet_name=None, cred_path=None):
+        self.cred_path = cred_path
 
     def check_creds(self):
-        cred_path = Pool.get('config').directories.gdrive_token
-        if not cred_path:
-            cred_path = path.join(getenv('LOCALAPPDATA'), r"sap\credentials")
-        if not isfile(path.join(cred_path, 'google_sheet.json')):
+        if not isfile(path.join(self.cred_path, 'google_sheet.json')):
             return FileNotFoundError
         return self.initiate_service()
 
@@ -29,10 +26,7 @@ class GoogleSheetsAPI(object):
         # The ID and range of a sample spreadsheet.
         SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
         SAMPLE_RANGE_NAME = 'Class Data!A2:E'
-        cred_path = Pool.get('config').directories.gdrive_token
-        if not cred_path:
-            cred_path = path.join(getenv('LOCALAPPDATA'), r"sap\credentials")
-        token_path = path.join(cred_path, 'token.json')
+        token_path = path.join(self.cred_path, 'token.json')
 
         creds = None
         if os.path.exists(token_path):
@@ -42,7 +36,7 @@ class GoogleSheetsAPI(object):
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    path.join(cred_path, 'google_sheet.json'), SCOPES)
+                    path.join(self.cred_path, 'google_sheet.json'), SCOPES)
                 creds = flow.run_local_server(port=0)
             with open(token_path, 'w+') as token:
                 token.write(creds.to_json())

@@ -172,12 +172,12 @@ class LoginForm(object):
         _translate = QtCore.QCoreApplication.translate
         parent.setWindowTitle(_translate("parent", "Sign in"))
         parent.loginPushButton.setText(_translate("parent", "Sign in"))
-        parent.cancelPushButton.setText(_translate("parent", "Cancel"))
+        parent.cancelPushButton.setText(_translate("parent", "Exit"))
         parent.mainGroupBox.setTitle(_translate("parent", "Sign in"))
         parent.usernameLabel.setText(_translate("parent", "Username"))
         parent.passwordLabel.setText(_translate("parent", "Password"))
         # parent.username_qwidget.setText(_translate("parent", "admin"))
-        # parent.username_qwidget.setText(_translate("parent", "Superuser"))
-        # parent.password_qwidget.setText(_translate("parent", "SuperPeym@n"))
+        parent.username_qwidget.setText(_translate("parent", "Superuser"))
+        parent.password_qwidget.setText(_translate("parent", "SuperPeym@n"))
         # parent.password_qwidget.setText(_translate("parent", "123"))
 from source.framework.ui.qt_ui.extended_widgets.extended_lineedit import ExtendedLineEdit

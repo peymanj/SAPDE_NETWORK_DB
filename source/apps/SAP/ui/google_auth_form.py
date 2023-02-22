@@ -64,7 +64,7 @@ class GoogleAuthForm(QtWidgets.QMainWindow):
     def get_path(self):
         self.cred_path = QtWidgets.QFileDialog.\
             getOpenFileNames(self, "Select credentional file", QtCore.QDir.currentPath(), "JSON Files (*.json)")
-        if self.cred_path:
+        if self.cred_path[0]:
             self.pathLineEdit.setText(self.cred_path[0][0])
         
         

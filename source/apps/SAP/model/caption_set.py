@@ -32,6 +32,10 @@ class CaptionSet(Model):
         'check6_tr': Fields.char('Final check 6 caption', length=100),
         'check7_tr': Fields.char('Final check 7 caption', length=100),
         'check8_tr': Fields.char('Final check 8 caption', length=100),
+        'part1_tr': Fields.char('Part 1 caption', length=100),
+        'part2_tr': Fields.char('Part 2 caption', length=100),
+        'part3_tr': Fields.char('Part 3 caption', length=100),
+        'part4_tr': Fields.char('Part 4 caption', length=100),
     }
 
 

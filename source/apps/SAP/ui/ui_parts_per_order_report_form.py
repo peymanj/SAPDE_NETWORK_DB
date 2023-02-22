@@ -18,61 +18,137 @@ class UiPartsPerOrderReportForm(UiBaseClass):
 
     def print_order_rep(self):
         data = self.list_data
-        if len(data) % 2 == 1:
-            return
+
+
+        n_data = len(data)
+        order_name = data[0].get('order')[1]
+        order_item_data = {}
+        ordered_data = {}
+        for i in range(n_data):
+            set_no = data[i]['item_set'][0]
+            order_item_no = data[i]['order_item'][0]
+
+            if order_item_no not in ordered_data:
+                ordered_data[order_item_no] = {}
+            if set_no not in ordered_data[order_item_no]:
+                ordered_data[order_item_no][set_no] = {
+                   'parts': [False] * 4,
+                   'weight': 0,
+                   'create_user': None,
+                   'update_user': None,
+                   'update_date': None,
+            }
+            ordered_data[order_item_no][set_no]['parts'][data[i]['side'][0]-1] = (data[i])
+            if order_item_no not in order_item_data:
+                order_item_data[order_item_no] = data[i]
+
+
+
+        max_part_column = 0
+        update_date = datetime(1900, 1, 1)
+
+        for o_i in ordered_data:
+            for i_s in ordered_data[o_i]:
+                parts = ordered_data[o_i][i_s]['parts']
+                max_part = 0
+                for i in range(len(parts), 0, -1):
+                    if parts[i-1]:
+                        max_part = i
+                        break
+
+                if max_part > max_part_column:
+                    max_part_column = max_part
+
+                sum_weight = 0
+                for part in ordered_data[o_i][i_s]['parts']:
+                    sum_weight += part.get('weight', 0) if part else 0
+                    if part and update_date < part["update_date"]:
+                        update_date = part["update_date"]
+                ordered_data[o_i][i_s]['weight'] = sum_weight
+                ordered_data[o_i][i_s]['update_date'] = update_date
+
 
         wmax = 0
         wmin = 100000
-        for i in range(0, len(data) - 1, 2):
-            w1 = data[i].get('weight') or 0
-            w2 = data[i + 1].get('weight') or 0
-            w = w1 + w2
-            if w > wmax:
-                wmax = w
-            if w < wmin:
-                wmin = w
+        for o_i in ordered_data:
+            for n in ordered_data[o_i]:
+                i_s = ordered_data[o_i][n]
+                if i_s.get('weight') > wmax:
+                    wmax = i_s.get('weight')
+            if i_s.get('weight') < wmin:
+                wmin = i_s.get('weight')
 
-        visible_sn = dict.fromkeys(['sn%s' % i for i in range(1, 11)], False)
-        visible_check = dict.fromkeys(['check%s' % i for i in range(1, 11)], False)
-        visible_sn_count = 0
-        visible_check_count = 0
 
-        for c in range(1, 11):
-            for rec in data:
-                if rec.get('sn%s' % c) is not None:
-                    visible_sn['sn%s' % c] = True
-                    visible_sn_count += 1
-                    break
-        for c in range(1, 11):
-            for rec in data:
-                if rec.get('check%s' % c) is not None:
-                    visible_check['check%s' % c] = True
-                    visible_check_count += 1
-                    break
+        max_part_count = {
+            1: {'sn': 0, 'check': 0},
+            2: {'sn': 0, 'check': 0},
+            3: {'sn': 0, 'check': 0},
+            4: {'sn': 0, 'check': 0},
+        }
+        for o_i in ordered_data:
+            for i_s in ordered_data[o_i]:
+                for i in range(1, len(ordered_data[o_i][i_s]['parts']) + 1):
+                    part = ordered_data[o_i][i_s]['parts'][i - 1]
+                    sn = 0
+                    check = 0
+                    for c in range(1, 9):
+                        if part and part.get('sn%s' % c) is not None:
+                            sn += 1
+                        if part and part.get('check%s' % c) is not None:
+                            check += 1
+                    if max_part_count[i]['sn'] < sn:
+                        max_part_count[i]['sn'] = sn
+                    if max_part_count[i]['check'] < check:
+                        max_part_count[i]['check'] = check
+                break
 
-        fields = boxes = self.api_get('get_model_fields', {'model': 'parts_per_order_report'})['fields']
+        fields = self.api_get('get_model_fields', {'model': 'parts_per_order_report'})['fields']
         header = {}
         for f, obj in fields.items():
-            header[f] = self.translate(obj['string'],  self.get_current_parent('order'))
+            header[f] = self.translate(obj['string'], self.get_current_parent('order'))
 
-        header['front'] = tr('Front')
-        header['back'] = tr('Back')
+        for i in range(1, 5):
+            string = f'Part {i}'
+            header[string] = self.pool.get('api').internal_exec('part', 'translate',
+                                                                {'phrase': string,
+                                                                 'model_id': self.get_current_parent('order')})
+
+        # header['front'] = tr('Front')
+        # header['back'] = tr('Back')
         header['company_name'] = tr('Company Name')
         header['sap_order_report'] = tr('SAP Order Report')
         header['date'] = tr('Date')
         header['row'] = tr('Row')
+        header['total_weight'] = tr('Total weight')
+
+
+        visible_parts = {}
+        for i in range(1, 5):
+            visible_parts[i] = {}
+            if i <= max_part_column:
+                visible_parts[i]['visible'] = True
+                sn = max_part_count[i]['sn']
+                check = max_part_count[i]['check']
+            else:
+                visible_parts[i]['visible'] = False
+                sn = 0
+                check = 0
+
+            visible_parts[i]['visible_sn_count'] = [True]*sn + [False]*(8-sn)
+            visible_parts[i]['visible_check_count'] = [True]*check + [False] * (8 - check)
 
         self.render_print_template(template_file='template_order_report.html',
-                                   data=data,
+                                   data=ordered_data,
                                    header=header,
-                                   other_data={'date': str(datetime.now().replace(microsecond=0)),
-                                               'max_weight': wmax,
-                                               'min_weight': wmin,
-                                               'visible_sn': visible_sn,
-                                               'visible_check': visible_check,
-                                               'visible_sn_count': visible_sn_count,
-                                               'visible_check_count': visible_check_count,
-                                               }
+                                   other_data={
+                                       'order': order_name,
+                                       'date': str(datetime.now().replace(microsecond=0)),
+                                       'max_weight': wmax,
+                                       'min_weight': wmin,
+                                       },
+                                   visibility=visible_parts,
+                                   field_count=max_part_count,
+                                   order_item_data=order_item_data,
                                    )
 
     _menu_bar = False

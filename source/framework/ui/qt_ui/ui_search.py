@@ -65,7 +65,8 @@ class UiSearch(QWidget):
                     self.relative_search = False
         elif self.f_obj['type'] == 'selection':
             self.relative_search = True
-            selections = self.parent.api('exec', self.parent.model, self.f_obj['func'], context={})
+            context = {'order_id': self.get_current_parent('order')}
+            selections = self.parent.api('exec', self.parent.model, self.f_obj['func'], context=context)
             self.search_form.relationalComboBox.setValue(selections)
         else:
             self.relative_search = False

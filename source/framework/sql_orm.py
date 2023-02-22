@@ -282,7 +282,7 @@ class Orm(Base):
                 for row in range(len(data)):
                     if data[row][field] != None:
                         data[row][field] = (data[row][field],
-                                            api.internal_exec(model._name, func_name, {'id': data[row][field]}))
+                                            api.internal_exec(model._name, func_name, {'id': data[row][field], 'context': data}))
 
         return data
 
@@ -300,7 +300,7 @@ class Orm(Base):
                 for row in range(len(data)):
                     if data[row][field]:
                         data[row][field] = (data[row][field],
-                                            api.internal_exec(model._name, func_name, {'id': data[row][field]}))
+                                            api.internal_exec(model._name, func_name, {'id': data[row][field], 'context': data}))
         return data
 
     def process_cond(self, cond_list):

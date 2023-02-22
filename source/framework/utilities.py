@@ -6,23 +6,26 @@ from .pool import Pool
 from os import path, getenv
 import sys
 
-
 # returns translation of a given string
 
 translation_cache = {}
+
 
 def tr(phrase, model=None, model_id=None, cache=True):
     from source.framework.pool import Pool
     cached = translation_cache.get(phrase, None)
     if cached is not None:
         return cached
-    translation = Pool.get('ui_connector')\
+    t = Pool.get('ui_connector') \
         .api_get('translate', {'phrase': phrase,
                                'model': model,
-                               'model_id': model_id})['translation']
+                               'model_id': model_id})
+    translation = t and t.get('translation') or phrase
+
     if cache:
         translation_cache[phrase] = translation
     return translation
+
 
 def get_error_details(type, value, tback):
     msg = '\n' \
@@ -42,7 +45,7 @@ def get_error_details(type, value, tback):
         if tback.tb_next:
             tback = tback.tb_next
         else:
-            print (data)
+            print(data)
             print(headers)
             msg += tabulate(data, headers=headers)
             return msg
@@ -55,7 +58,7 @@ def _write_to_log_file(msg: str, file_path: str) -> None:
 
 
 def log(message, sql=False, print_msg=False):
-    if isinstance(message, Exception):
+    if isinstance(message, Exception) and Pool.get('debug'):
         type, value, tback = sys.exc_info()
         message = get_error_details(type, value, tback)
         print(message)
@@ -68,11 +71,11 @@ def log(message, sql=False, print_msg=False):
         log_path = Pool.get('config').directories.log.replace('(localappdata)', lad) + 'EasysERP_log.txt'
     now = str(datetime.now())
 
-    message = '\n' + '-' * 30 + '\n' + now + '\n' + message
+    long_message = '\n' + '-' * 30 + '\n' + now + '\n' + message
     if sql == 'error':
-        print(message)
-    _write_to_log_file(message, log_path)
-    if print_msg: print(message)
+        print(long_message)
+    _write_to_log_file(long_message, log_path)
+    if print_msg: print(long_message)
     return message
 
 
@@ -81,7 +84,11 @@ def exception_handler(type, value, tback):
 
     if type != MsgBoxError:
         msg = ExtendedMessageBox()
-        msg.show(msg.Error, log(get_error_details(type, value, tback)))
+        if Pool.get('debug'):
+            msg.show(msg.Error, log(get_error_details(type, value, tback)))
+        else:
+            msg.show(msg.Error, log(str(value.message)
+                                    if hasattr(value, 'message') else str(value) if value else '-'))
     sys.__excepthook__(type, value, tback)
 
 

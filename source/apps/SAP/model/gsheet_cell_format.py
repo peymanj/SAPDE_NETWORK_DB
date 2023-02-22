@@ -155,101 +155,55 @@ order_data_dates = {"requests":
     ]
 }
 
-order_detail_header_front = {"requests":
-    [
-        {
-            "repeatCell":
-                {
-                    "cell":
-                        {
-                            "userEnteredFormat":
-                                {
-                                    'backgroundColorStyle':
-                                        {
-                                            "rgbColor": {
-                                                "red": 0.984,
-                                                "green": 0.792,
-                                                "blue": 0.576
-                                            }
-                                        }
-                                }
-                        }
-                    ,
-                    "fields": "userEnteredFormat",
-                    "range":
-                        {
-                            "sheetId": 0,
-                            "startRowIndex": 4,
-                            "endRowIndex": 6,
-                            "startColumnIndex": 6,
-                            "endColumnIndex": 23,
-                        }
-                }
-        },
-        {
-            'mergeCells':
-                {
-                    'mergeType': 'MERGE_COLUMNS',
-                    'range':
-                        {
-                            'sheetId': 0,
-                            'startRowIndex': 3,
-                            'endRowIndex': 4,
-                            'startColumnIndex': 6,
-                            'endColumnIndex': 23,
-                        }
-                }
-        }
-    ]
-}
 
-order_detail_header_back = {"requests":
-    [
-        {
-            "repeatCell":
-                {
-                    "cell":
-                        {
-                            "userEnteredFormat":
-                                {
-                                    'backgroundColorStyle':
-                                        {
-                                            "rgbColor": {
-                                                "red": 0.984,
-                                                "green": 0.933,
-                                                "blue": 0.576
-                                            }
-                                        }
-                                }
-                        }
-                    ,
-                    "fields": "userEnteredFormat",
-                    "range":
-                        {
-                            "sheetId": 0,
-                            "startRowIndex": 4,
-                            "endRowIndex": 6,
-                            "startColumnIndex": 23,
-                            "endColumnIndex": 40
-                        }
-                }
-        },
-        {
-            'mergeCells':
-                {
-                    'mergeType': 'MERGE_COLUMNS',
-                    'range':
-                        {
-                            "sheetId": 0,
-                            "startRowIndex": 3,
-                            "endRowIndex": 4,
-                            "startColumnIndex": 23,
-                            "endColumnIndex": 40
-                        }
-                }
-        }
-    ]
-}
+
+# order_detail_header_back = {"requests":
+#     [
+#         {
+#             "repeatCell":
+#                 {
+#                     "cell":
+#                         {
+#                             "userEnteredFormat":
+#                                 {
+#                                     'backgroundColorStyle':
+#                                         {
+#                                             "rgbColor": {
+#                                                 "red": 0.984,
+#                                                 "green": 0.933,
+#                                                 "blue": 0.576
+#                                             }
+#                                         }
+#                                 }
+#                         }
+#                     ,
+#                     "fields": "userEnteredFormat",
+#                     "range":
+#                         {
+#                             "sheetId": 0,
+#                             "startRowIndex": 4,
+#                             "endRowIndex": 6,
+#                             "startColumnIndex": 23,
+#                             "endColumnIndex": 40
+#                         }
+#                 }
+#         },
+#         {
+#             'mergeCells':
+#                 {
+#                     'mergeType': 'MERGE_COLUMNS',
+#                     'range':
+#                         {
+#                             "sheetId": 0,
+#                             "startRowIndex": 3,
+#                             "endRowIndex": 4,
+#                             "startColumnIndex": 23,
+#                             "endColumnIndex": 40
+#                         }
+#                 }
+#         }
+#     ]
+# }
 
 order_detail_header_general_start = {"requests":
     [
@@ -285,47 +239,97 @@ order_detail_header_general_start = {"requests":
     ]
 }
 
-order_detail_header_general_end = {"requests":
-    [
-        {
-            "repeatCell":
-                {
-                    "cell":
-                        {
-                            "userEnteredFormat":
-                                {
-                                    'backgroundColorStyle':
-                                        {
-                                            "rgbColor": {
-                                                "red": 0.580,
-                                                "green": 0.776,
-                                                "blue": 1.0
-                                            }
-                                        }
-                                }
-                        }
-                    ,
-                    "fields": "userEnteredFormat",
-                    "range":
-                        {
-                            "sheetId": 0,
-                            "startRowIndex": 5,
-                            "endRowIndex": 6,
-                            "startColumnIndex": 40,
-                            "endColumnIndex": 44
-                        }
-                }
-        }
-    ]
-}
-
 format_list = [
     header_merge,
     order_data_bg_color,
     order_data_dates,
-    order_detail_header_front,
-    order_detail_header_back,
     order_detail_header_general_start,
-    order_detail_header_general_end,
     centered,
 ]
+def get_part_header_format(start_col, end_col, r, g, b):
+    return  {"requests":
+                [
+                    {
+                        "repeatCell":
+                            {
+                                "cell":
+                                    {
+                                        "userEnteredFormat":
+                                            {
+                                                'backgroundColorStyle':
+                                                    {
+                                                        "rgbColor": {
+                                                            "red": r, #0.984,
+                                                            "green": g, #0.792,
+                                                            "blue": b, #0.576
+                                                        }
+                                                    } #,
+                                                # 'textRotation':
+                                                #     {
+                                                #         "angle": -90
+                                                #     }
+                                            }
+                                    }
+                                ,
+                                "fields": "userEnteredFormat",
+                                "range":
+                                    {
+                                        "sheetId": 0,
+                                        "startRowIndex": 4,
+                                        "endRowIndex": 6,
+                                        "startColumnIndex": start_col,
+                                        "endColumnIndex": end_col,
+                                    }
+                            }
+                    },
+                    {
+                        'mergeCells':
+                            {
+                                'mergeType': 'MERGE_COLUMNS',
+                                'range':
+                                    {
+                                        'sheetId': 0,
+                                        'startRowIndex': 3,
+                                        'endRowIndex': 4,
+                                        'startColumnIndex': 6,
+                                        'endColumnIndex': 23,
+                                    }
+                            }
+                    }
+                ]
+            }
+
+def get_end_header_format(start_col, end_col, r, g, b):
+    return {"requests":
+                [
+                    {
+                        "repeatCell":
+                            {
+                                "cell":
+                                    {
+                                        "userEnteredFormat":
+                                            {
+                                                'backgroundColorStyle':
+                                                    {
+                                                        "rgbColor": {
+                                                            "red": r, #0.580,
+                                                            "green": g, # 0.776,
+                                                            "blue": b, #1.0
+                                                        }
+                                                    }
+                                            }
+                                    }
+                                ,
+                                "fields": "userEnteredFormat",
+                                "range":
+                                    {
+                                        "sheetId": 0,
+                                        "startRowIndex": 5,
+                                        "endRowIndex": 6,
+                                        "startColumnIndex": start_col,
+                                        "endColumnIndex": end_col
+                                    }
+                            }
+                    }
+                ]
+            }

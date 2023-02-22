@@ -15,6 +15,10 @@ class UiCaptionSetForm(UiBaseClass):
     _form_view = {
         'fields': [
             'name',
+            'part1_tr',
+            'part2_tr',
+            'part3_tr',
+            'part4_tr',
             'sn1_tr',
             'sn2_tr',
             'sn3_tr',

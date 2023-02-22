@@ -41,7 +41,7 @@ class Initiate():
         parser.add_argument("-u", "--upgrade", action="store_true", help="Upgrade Database")
         args = parser.parse_args()
         init_args = vars(args)
-
+        pool.set(init_args.get('debug'), 'debug')
         config = pool.set(Setting(config_path), 'config')
         setting = pool.set(Setting(setting_path), 'setting')
         orm = pool.set(Orm(), 'orm')
@@ -68,7 +68,8 @@ class Initiate():
             end_time = datetime.now()
             log('Upgrade completed in {}'.format(end_time - start_time), print_msg=True)
 
-        while (datetime.now() - now).seconds < 5:
+        splash_time = 0.2 if (init_args.get('debug') or init_args.get('upgrade')) else 5
+        while (datetime.now() - now).seconds < splash_time:
             QApplication.processEvents()
 
         ui_connector = pool.set(UiConnector(), 'ui_connector')

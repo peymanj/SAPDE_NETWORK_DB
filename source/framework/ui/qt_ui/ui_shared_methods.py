@@ -345,7 +345,8 @@ def init_selection(self, name, form_widget):
     if local_data:
         data = getattr(self.ui, local_data)()
     else:
-        data = self.api('exec', self.model, method_name, {})
+        context = {'order_id': self.get_current_parent('order')}
+        data = self.api('exec', self.model, method_name, context)
     getattr(form_widget, name + '_qwidget').setValue(data)
 
 

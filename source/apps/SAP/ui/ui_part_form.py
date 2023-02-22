@@ -30,19 +30,13 @@ class UiPartForm(UiBaseClass):
             lambda: QTimer.singleShot(500, self.start_weight_thread))
         self.weight_qwidget.focus_out_signal.connect(self.stop_weight_thread)
         self.weight_qwidget.setMaximum(100000)
-        getattr(self.form_widget, 'side_qwidget').currentIndexChanged.connect(self.set_serials)
+        getattr(self.form_widget, 'side_qwidget').currentIndexChanged.connect(self.set_layout)
+        self.set_side_selection()
         self.set_layout()
 
         item_set_id = self.get_current_parent('item_set')
         parts = self.api('exec', 'part', 'search', {'condition': [('item_set', '=', item_set_id)]})
-        if len(parts) == 0:
-            index = 0
-        elif len(parts) == 1 and parts[0].get('side') == 1:
-            index = 1
-        elif len(parts) == 1 and parts[0].get('side') == 2:
-            index = 0
-        else:
-            index = 0
+        index = len(parts)
         self.form_widget.side_qwidget.setCurrentIndex(index)
         return super().create_init()
 
@@ -54,7 +48,8 @@ class UiPartForm(UiBaseClass):
             lambda: QTimer.singleShot(500, self.start_weight_thread))
         self.weight_qwidget.focus_out_signal.connect(self.stop_weight_thread)
         self.weight_qwidget.setMaximum(100000)
-        getattr(self.form_widget, 'side_qwidget').currentIndexChanged.connect(self.set_serials)
+        getattr(self.form_widget, 'side_qwidget').currentIndexChanged.connect(self.set_layout)
+        self.set_side_selection()
         self.set_layout()
         return super().update_init()
 
@@ -83,43 +78,75 @@ class UiPartForm(UiBaseClass):
         order_item_id = self.api('exec', 'item_set', 'related_read', context={'id': set_id, 'field': 'order_item'})
         self.order_item = self.api('exec', 'order_item', 'read',
                                    {'ids': [order_item_id], 'post_proc': False, 'return_object': False})[0]
+        self.set_part_fields()
 
+    def set_part_fields(self):
+
+        def hide(field_name):
+            getattr(self.form_widget, field_name).setHidden(True)
+
+        def unhide(field_name):
+            getattr(self.form_widget, field_name).setHidden(False)
+
+        def enable(field_name):
+            getattr(self.form_widget, field_name).setEnabled(True)
+
+        def disable(field_name):
+            getattr(self.form_widget, field_name).setEnabled(False)
+
+        def set_value(field_name, value):
+            getattr(self.form_widget, field_name).setValue(value)
+
+        # ------------- setting check fields ----------------------------------
         self.check_list = list()
         for i in range(8):
             if i >= self.order_item['no_fchecks']:
-                getattr(self.form_widget, 'check' + str(i + 1) + '_qwidget').setHidden(True)
-                getattr(self.form_widget, 'check' + str(i + 1) + '_label').setHidden(True)
+                hide('check' + str(i + 1) + '_qwidget')
+                hide('check' + str(i + 1) + '_label')
             else:
                 self.check_list.append(getattr(self.form_widget, 'check' + str(i + 1) + '_qwidget').getValue())
 
-
         if not self.order_item['image_required']:
-            getattr(self.form_widget, 'image_qwidget').setEnabled(False)
+            disable('image_qwidget')
+            hide('image_qwidget')
+            hide('image_label')
 
         if not self.order_item['check_weight']:
-            getattr(self.form_widget, 'weight_qwidget').setEnabled(False)
+            disable('weight_qwidget')
+            hide('weight_qwidget')
+            hide('weight_label')
+
+        if not self.order_item['check_length']:
+            disable('length_qwidget')
+            hide('length_qwidget')
+            hide('length_label')
+
+        if not self.order_item['check_width']:
+            disable('width_qwidget')
+            hide('width_qwidget')
+            hide('width_label')
+
+        if not self.order_item['check_thickness']:
+            disable('thickness_qwidget')
+            hide('thickness_qwidget')
+            hide('thickness_label')
 
         self.model_size_rel = self.api('exec', 'model_item', 'search',
                                        {'condition': ['and', ('model', '=', self.order_item['model']),
                                                       ('size', '=', self.order_item['size'])],
                                         'post_proc': False, 'return_object': False})[0]
-        self.set_serials()
 
-    def set_serials(self, val=None):
         val = getattr(self.form_widget, 'side_qwidget').getValue()
-        n_serials = 0
-        if val == 1:  # front
-            n_serials = self.model_size_rel['no_front_serials']
-        elif val == 2:  # back
-            n_serials = self.model_size_rel['no_back_serials']
+
+        n_serials = self.model_size_rel['no_serials_' + str(val)] if val else 0
         for i in range(8):
             if i >= n_serials:
-                getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget').setValue(False)
-                getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget').setHidden(True)
-                getattr(self.form_widget, 'sn' + str(i + 1) + '_label').setHidden(True)
+                set_value('sn' + str(i + 1) + '_qwidget', False)
+                hide('sn' + str(i + 1) + '_qwidget')
+                hide('sn' + str(i + 1) + '_label')
             else:
-                getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget').setHidden(False)
-                getattr(self.form_widget, 'sn' + str(i + 1) + '_label').setHidden(False)
+                unhide('sn' + str(i + 1) + '_qwidget')
+                unhide('sn' + str(i + 1) + '_label')
 
         for i in range(n_serials - 1):
             widget = getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget')
@@ -127,7 +154,19 @@ class UiPartForm(UiBaseClass):
                 widget.returnPressed.connect(lambda: self.focusNextPrevChild(True))
                 widget.return_press_connected = True
 
-
+    def set_side_selection(self):
+        set_id = self.get_form_fields(self.form_widget, ['item_set']).get('item_set')
+        order_item_id = self.api('exec', 'item_set', 'related_read', context={'id': set_id, 'field': 'order_item'})
+        self.order_item = self.api('exec', 'order_item', 'read',
+                                   {'ids': [order_item_id], 'post_proc': False, 'return_object': False})[0]
+        model_size_rel = self.api('exec', 'model_item', 'search',
+                                       {'condition': ['and', ('model', '=', self.order_item['model']),
+                                                      ('size', '=', self.order_item['size'])],
+                                        'post_proc': False, 'return_object': False})[0]
+        size_widget = getattr(self.form_widget, 'side_qwidget')
+        for i in range(3, -1, -1):
+            if i + 1 > model_size_rel['n_parts']:
+                size_widget.removeItem(i)
 
     def validate(self):
         def ask_for_pass():
@@ -141,81 +180,76 @@ class UiPartForm(UiBaseClass):
             else:
                 return False
 
-        self.weight_qwidget = getattr(self.form_widget, 'weight_qwidget')
-        if self.weight_qwidget.isEnabled():
+        var_fields = ('weight', 'length', 'width', 'thickness')
+        for f in var_fields:
 
-            val = getattr(self.form_widget, 'side_qwidget').getValue()
-            if val == 1:  # front
-                min_weight = self.model_size_rel['min_weight_front']
-                max_weight = self.model_size_rel['max_weight_front']
-            elif val == 2:  # back
-                min_weight = self.model_size_rel['min_weight_back']
-                max_weight = self.model_size_rel['max_weight_back']
+            self.qwidget = getattr(self.form_widget, f'{f}_qwidget')
+            if self.qwidget.isEnabled():
 
-            if int(self.weight_qwidget.getValue()) > int(max_weight):
-                if self.msg.show(self.msg.Question, 'Part over weight, submit?',
-                                 add_msg=f'max allowd weight: {max_weight} gr'):
-                    if not ask_for_pass():
+                val = getattr(self.form_widget, 'side_qwidget').getValue()
+                min_val = self.model_size_rel[f'min_{f}_{val}']
+                max_val = self.model_size_rel[f'max_{f}_{val}']
+
+                if int(self.qwidget.getValue()) > int(max_val):
+                    if self.msg.show(self.msg.Question, f'Part {f} higher than range, submit?',
+                                     add_msg=f'Max allowed value: {max_val}'):
+                        if not ask_for_pass():
+                            return False
+                    else:
                         return False
-                else:
-                    return False
 
-            if int(self.weight_qwidget.getValue()) < int(min_weight):
-                if self.msg.show(self.msg.Question, 'Part under weight, submit?',
-                                 add_msg=f'min allowd weight: {min_weight} gr'):
-                    if not ask_for_pass():
+                if int(self.qwidget.getValue()) < int(min_val):
+                    if self.msg.show(self.msg.Question, f'Part {f} Lower than range, submit?',
+                                     add_msg=f'Min allowed value: {min_val}'):
+                        if not ask_for_pass():
+                            return False
+                    else:
                         return False
-                else:
-                    return False
 
         if self.order_item['image_required']:
             if not getattr(self.form_widget, 'image_qwidget').val:
                 self.msg.show(self.msg.Error, 'Image not loaded')
+        return True
 
-        # for i in range(8):
-        #     if not getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget').isHidden():
-        #         if not getattr(self.form_widget, 'sn' + str(i + 1) + '_qwidget').getValue():
-        #             self.msg.show(self.msg.Error, 'Serial required')
-
+    def save_checks(self):
+        if not self.validate():
+            return False
+        self.check_list_new = list()
+        for i in range(8):
+            if i < self.order_item['no_fchecks']:
+                self.check_list_new.append(getattr(self.form_widget, 'check' + str(i + 1) + '_qwidget').getValue())
+        if self.check_list != self.check_list_new:
+            curr_user = self.pool.get('current_user')
+            self.set_form_fields(self.form_widget, {
+                'check_user': (curr_user['id'],
+                               f"{curr_user['fullname']} ({curr_user['username']})")})
         return True
 
     def save(self):
-        if not self.validate():
-            return
-        self.check_list_new = list()
-        for i in range(8):
-            if i < self.order_item['no_fchecks']:
-                self.check_list_new.append(getattr(self.form_widget, 'check' + str(i + 1) + '_qwidget').getValue())
-        if self.check_list != self.check_list_new:
-            curr_user = self.pool.get('current_user')
-            self.set_form_fields(self.form_widget, {
-                'check_user': (curr_user['id'],
-                               f"{curr_user['fullname']} ({curr_user['username']})")})
-        return super().save()
+        if self.save_checks():
+            return super().save()
 
     def save_and_create_new(self):
-        if not self.validate():
-            return
-        self.check_list_new = list()
-        for i in range(8):
-            if i < self.order_item['no_fchecks']:
-                self.check_list_new.append(getattr(self.form_widget, 'check' + str(i + 1) + '_qwidget').getValue())
-        if self.check_list != self.check_list_new:
-            curr_user = self.pool.get('current_user')
-            self.set_form_fields(self.form_widget, {
-                'check_user': (curr_user['id'],
-                               f"{curr_user['fullname']} ({curr_user['username']})")})
-        return super().save_and_create_new()
+        if self.save_checks():
+            return super().save_and_create_new()
 
     def reopen_create_preprocess(self):
         box_id = self.get_current_parent('box')
+        order_item_id = self.get_current_parent('order_item')
+        order_item = self.api('exec', 'order_item', 'read',
+                             {'ids': [order_item_id]})
+        model = order_item[0]['model'][0]
+        size = order_item[0]['size'][0]
+        model_item = self.api('exec', 'model_item', 'search',
+                             {'condition':
+                                  ['and', ('model', '=', model), ('size', '=', size)]})
         item_sets = self.api('exec', 'item_set', 'search',
                              {'condition': [('box', '=', box_id)], 'id_only': True})
         item_sets = sorted(item_sets)
         for id in item_sets:
             if self.get_current_parent('item_set') <= id:
                 parts = self.api('exec', 'part', 'search', {'condition': [('item_set', '=', id)]})
-                if len(parts) < 2:
+                if len(parts) < model_item[0]['n_parts']:
                     return id
         return False
 
@@ -232,6 +266,9 @@ class UiPartForm(UiBaseClass):
             'side',
             'image',
             {'weight': {'max': 10000}},
+            'length',
+            'width',
+            'thickness',
             'sn1',
             'sn2',
             'sn3',

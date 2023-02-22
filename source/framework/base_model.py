@@ -453,7 +453,7 @@ class Model(Base):
     def get_field(self, f_name):
         return self._fields.get(f_name).to_dict()
 
-    def get_fields(self):
+    def get_fields(self, params=None):
         return {f_name: obj.to_dict() for f_name, obj in self._fields.items()}
 
     def translate(self, params={}):

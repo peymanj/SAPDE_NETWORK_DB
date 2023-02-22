@@ -1,9 +1,9 @@
-import os
 from datetime import datetime
-from os import getenv, path
+from os import getenv, path, remove
+from shutil import rmtree
 from base64 import urlsafe_b64decode
 from googleapiclient.errors import HttpError
-
+from google.auth.exceptions import RefreshError
 from source.framework.base_model import Model
 from source.framework.fields import Fields
 from source.framework.intergration.gdrive.gdrive_api import GoogleSheetsAPI
@@ -72,21 +72,24 @@ class Order(Model):
                 log(e)
                 return {'message': 'Unable to create new Google Sheet'}
             sheet_url = 'https://docs.google.com/spreadsheets/d/' + sheet_id
-            self.update({'id': order.id, 'field_values': {'g_sheet': sheet_url}})
+            context.update({'id': order.id, 'field_values': {'g_sheet': sheet_url}})
+            self.update(context)
             return sheet_id
 
         order_id = context.get('id')
         order = self.pool.get('api').internal_exec('order', 'read', {'ids': [order_id], 'return_object': True})[0]
         data = self.get_report_data(order_id, order)
         try:
-            gapi = GoogleSheetsAPI()
-            init_data = gapi.check_creds()
+            cred_path = path.join(getenv('LOCALAPPDATA'), r"sap\credentials")
+            # gapi = GoogleSheetsAPI(cred_path=cred_path)
+            # init_data = gapi.check_creds()
+            raise RefreshError
             if init_data == FileNotFoundError:
                 return {'message': 'cred_file_not_found'}
-
-        except Exception as e:
-            log(e)
-            return {'message': 'Unable to connect to Google Sheet API'}
+        except RefreshError as e:
+            remove(cred_path)
+            # log(e)
+            return {'message': e.args[0]}
         if not order.g_sheet:
             sheet_id = create_new_sheet(order)
         try:
@@ -114,14 +117,40 @@ class Order(Model):
 
         for f in format_list:
             gapi.format_cells(spreadsheet_id, f)
+        start = 0
+        headers = data[4]
+        color = 0
+        colors = {
+            0: {'r':0.4, 'g':0.6, 'b':1.0},
+            1: {'r':0.0, 'g':0.8, 'b':0.4},
+            2: {'r':1.0, 'g':1.0, 'b':0.6},
+            3: {'r':0.8, 'g':0.6, 'b':1.0},
+            4: {'r':0.0, 'g':1.0, 'b':1.0},
+        }
+        for i in range(len(headers)-1):
+            end = 0
+            if headers[i]:
+                start = i
+            if headers[i+1] and start:
+                end = i + 1
+            if i == len(headers)-2:
+                end = i + 2
+            if start and end:
+                c = colors[color]
+                f = get_part_header_format(start, end, c['r'], c['g'], c['b'])
+                gapi.format_cells(spreadsheet_id, f)
+                color += 1
+
+        f = get_end_header_format(end, end + 4, **colors[4])
+        gapi.format_cells(spreadsheet_id, f)
         return {'message': 'Upload successful.'}
 
     def copy_cred_file(self, params={}):
         file = params.get('file')
         if file:
-            cred_path = path.join(self.pool.get('config').directories.gdrive_token, 'google_sheet.json')
-            if not cred_path:
-                cred_path = path.join(getenv('LOCALAPPDATA'), r"sap\credentials\google_sheet.json")
+            # cred_path = path.join(self.pool.get('config').directories.gdrive_token, 'google_sheet.json')
+            # if not cred_path:
+            cred_path = path.join(getenv('LOCALAPPDATA'), r"sap\credentials\google_sheet.json")
             with open(cred_path, "wb") as f:
                 f.write(bytes(file, 'utf-8'))
 
@@ -142,50 +171,162 @@ class Order(Model):
             def __init__(self) -> None:
                 super().__init__('There is at least one set with incomplete data. Unable to upload to GDrive.')
 
-        sn_count = 8
-        chk_count = 8
         data = self.pool.get('api').internal_exec('parts_per_order_report', 'read', context={'order_id': order_id})
-        header = list()
-        header.append([tr('SAP Data Entry Log File')])
-        header.append([tr('Order'), order_obj.code])
-        header.append([tr('Delivery Date'), str(order_obj.delivery_date.date())])
-        header.append([tr('Report update Date'), str(datetime.now().date())])
-        header.append([''] * 6 + [tr('Front')] + [''] * (sn_count + chk_count) + [tr('Back')])
-        columns = [tr('Row'), tr('Pallet'), tr('Box'), tr('Set'), tr('Model'), tr('Size')]
+
+        n_data = len(data)
+        order_item_data = {}
+        ordered_data = {}
+        for i in range(n_data):
+            set_no = data[i]['item_set'][0]
+            order_item_no = data[i]['order_item'][0]
+
+            if order_item_no not in ordered_data:
+                ordered_data[order_item_no] = {}
+            if set_no not in ordered_data[order_item_no]:
+                ordered_data[order_item_no][set_no] = {
+                    'parts': [False] * 4,
+                    'weight': 0,
+                    'create_user': None,
+                    'update_user': None,
+                    'update_date': None,
+                }
+            ordered_data[order_item_no][set_no]['parts'][data[i]['side'][0] - 1] = (data[i])
+            if order_item_no not in order_item_data:
+                order_item_data[order_item_no] = data[i]
+
+        max_part_column = 0
+        update_date = datetime(1900, 1, 1)
+
+        for o_i in ordered_data:
+            for i_s in ordered_data[o_i]:
+                parts = ordered_data[o_i][i_s]['parts']
+                max_part = 0
+                for i in range(len(parts), 0, -1):
+                    if parts[i - 1]:
+                        max_part = i
+                        break
+
+                if max_part > max_part_column:
+                    max_part_column = max_part
+
+                sum_weight = 0
+                for part in ordered_data[o_i][i_s]['parts']:
+                    sum_weight += part.get('weight', 0) if part else 0
+                    if part and update_date < part["update_date"]:
+                        update_date = part["update_date"]
+                ordered_data[o_i][i_s]['weight'] = sum_weight
+                ordered_data[o_i][i_s]['update_date'] = update_date
+
+        wmax = 0
+        wmin = 100000
+        for o_i in ordered_data:
+            for n in ordered_data[o_i]:
+                i_s = ordered_data[o_i][n]
+                if i_s.get('weight') > wmax:
+                    wmax = i_s.get('weight')
+            if i_s.get('weight') < wmin:
+                wmin = i_s.get('weight')
+
+        max_part_count = {
+            1: {'sn': 0, 'check': 0},
+            2: {'sn': 0, 'check': 0},
+            3: {'sn': 0, 'check': 0},
+            4: {'sn': 0, 'check': 0},
+        }
+        for o_i in ordered_data:
+            for i_s in ordered_data[o_i]:
+                for i in range(1, len(ordered_data[o_i][i_s]['parts']) + 1):
+                    part = ordered_data[o_i][i_s]['parts'][i - 1]
+                    sn = 0
+                    check = 0
+                    for c in range(1, 9):
+                        if part and part.get('sn%s' % c) is not None:
+                            sn += 1
+                        if part and part.get('check%s' % c) is not None:
+                            check += 1
+                    if max_part_count[i]['sn'] < sn:
+                        max_part_count[i]['sn'] = sn
+                    if max_part_count[i]['check'] < check:
+                        max_part_count[i]['check'] = check
+                break
+
+        visible_parts = {}
+        for i in range(1, 5):
+            visible_parts[i] = {}
+            if i <= max_part_column:
+                visible_parts[i]['visible'] = True
+                sn = max_part_count[i]['sn']
+                check = max_part_count[i]['check']
+            else:
+                visible_parts[i]['visible'] = False
+                sn = 0
+                check = 0
+
+            visible_parts[i]['visible_sn_count'] = [True] * sn + [False] * (8 - sn)
+            visible_parts[i]['visible_check_count'] = [True] * check + [False] * (8 - check)
+
         def _tr(phrase):
-            return  self.pool.get('api').internal_exec('parts_per_order_report', 'translate', {'phrase': phrase, 'model_id':order_id})
-        columns += [_tr(f'Serial Number {i}') for i in range(1, sn_count + 1)] \
-                   + [_tr(f'Final Check {i}') for i in range(1, chk_count + 1)] + [tr('Weight')]
-        columns += [_tr(f'Serial Number {i}') for i in range(1, sn_count + 1)] \
-                   + [_tr(f'Final Check {i}') for i in range(1, chk_count + 1)] + [tr('Weight')]
-        columns += [tr('Set weight'), tr('Create User'), tr('Editor user'), tr('Edit date')]
-        header.append(columns)
+            return  self.pool.get('api').internal_exec('part', 'translate', {'phrase': phrase, 'model_id':order_id})
+        headers = list()
+        headers.append([_tr('SAP Data Entry Log File')])
+        headers.append([_tr('Order'), order_obj.code])
+        headers.append([_tr('Delivery Date'), str(order_obj.delivery_date.date())])
+        headers.append([_tr('Report update Date'), str(datetime.now().date())])
+        h = [''] * 6
+        for i in range(4):
+            if visible_parts.get(i+1)['visible']:
+                h += [_tr('Part ' + str(i+1))] + (max_part_count.get(i + 1)['sn'] + max_part_count.get(i + 1)['check'] + 3) * ['']
+        headers.append(h)
+        columns = [_tr('Row'), _tr('Pallet'), _tr('Box'), _tr('Set'), _tr('Model'), _tr('Size')]
+        for p in range(1, 5):
+            for i in range(8):
+                if visible_parts.get(p)['visible_sn_count'][i]:
+                    columns += [_tr(f'Serial Number {i+1}')]
+            for i in range(8):
+                if visible_parts.get(p)['visible_check_count'][i]:
+                    columns += [_tr(f'Final Check {i+1}')]
+            if visible_parts.get(p)['visible']:
+                columns += [_tr('Weight'), _tr('length'), _tr('width'), _tr('thickness')]
 
-        struct = list()
-        for i in range(0, len(data), 2):
-            recf = data[i]
-            try:
-                recb = data[i + 1]
-            except Exception as e:
-                raise IncompleteSetExists
-            struct.append(
-                [(i + 2) / 2, get(recf, 'pallet'), get(recf, 'box'), get(recf, 'item_set'), get(recf, 'model'),
-                 get(recf, 'size'),
-                 get(recf, 'sn1'), get(recf, 'sn2'), get(recf, 'sn3'), get(recf, 'sn4'),
-                 get(recf, 'sn5'), get(recf, 'sn6'), get(recf, 'sn7'), get(recf, 'sn8'),
+        columns += [_tr('Set weight'), _tr('Create User'), _tr('Editor user'), _tr('Edit date')]
+        headers.append(columns)
 
-                 get(recf, 'check1'), get(recf, 'check2'), get(recf, 'check3'), get(recf, 'check4'),
-                 get(recf, 'check5'), get(recf, 'check6'), get(recf, 'check7'), get(recf, 'check8'),
-                 get(recf, 'weight'),
+        index = 0
+        struct = []
+        for o_i in ordered_data:
+            for i_s in ordered_data[o_i]:
+                index += 1
+                struct.append([])
+                order_item = order_item_data[o_i]
+                struct[-1] += [index, get(order_item, 'pallet'), get(order_item, 'box'), get(order_item, 'item_set'), get(order_item, 'model'),
+                        get(order_item, 'size'),]
+                for p in range(1, 5):
+                    if p - 1 < len(ordered_data[o_i][i_s]['parts']):
+                        part = ordered_data[o_i][i_s]['parts'][p-1]
+                    else:
+                        part = False
+                    for j in range(8):
+                        if visible_parts.get(p)['visible_sn_count'][j]:
+                            if part and get(part, 'sn' + str(j + 1)):
+                                struct[-1] += [get(part, 'sn' + str(j + 1))]
+                            else:
+                                struct[-1] += ['---']
+                    for j in range(8):
+                        if visible_parts.get(p)['visible_check_count'][j]:
+                            if part and get(part, 'check' + str(j + 1)):
+                                struct[-1] += [get(part, 'check' + str(j + 1))]
+                            else:
+                                struct[-1] += ['---']
+                    other_fields = ['weight', 'length', 'width', 'thickness']
+                    for f in other_fields:
+                        if visible_parts.get(p)['visible']:
+                            if part:
+                                struct[-1] += [get(part, f)]
+                            else:
+                                struct[-1] += ['---']
+                struct[-1].append(ordered_data[o_i][i_s]['weight'])
+                struct[-1].append('N/A')
+                struct[-1].append('N/A')
+                struct[-1].append(str(ordered_data[o_i][i_s]['update_date']))
 
-                 get(recb, 'sn1'), get(recb, 'sn2'), get(recb, 'sn3'), get(recb, 'sn4'),
-                 get(recb, 'sn5'), get(recb, 'sn6'), get(recb, 'sn7'), get(recb, 'sn8'),
-
-                 get(recb, 'check1'), get(recb, 'check2'), get(recb, 'check3'), get(recb, 'check4'),
-                 get(recb, 'check5'), get(recb, 'check6'), get(recb, 'check7'), get(recb, 'check8'),
-                 get(recb, 'weight'),
-
-                 get(recf, 'weight') + get(recb, 'weight'), get(recf, 'create_user'), get(recf, 'check_user'),
-                 str(get(recf, 'update_date').date())
-                 ])
-        return header + struct
+        return headers + struct
